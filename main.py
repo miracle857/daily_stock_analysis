@@ -521,17 +521,36 @@ def main() -> int:
         if args.schedule or config.schedule_enabled:
             logger.info("模式: 定时任务")
             logger.info(f"每日执行时间: {config.schedule_time}")
-            
-            from src.scheduler import run_with_schedule
-            
+
+            from src.scheduler import Scheduler
+
+            scheduler = Scheduler()
+
+            # Task 1: stock list analysis (existing)
             def scheduled_task():
                 run_full_analysis(config, args, stock_codes)
-            
-            run_with_schedule(
+
+            scheduler.add_daily_task(
+                name="stock_analysis",
                 task=scheduled_task,
                 schedule_time=config.schedule_time,
-                run_immediately=True  # 启动时先执行一次
+                run_immediately=True,
             )
+
+            # Task 2: portfolio analysis (new, independent toggle)
+            if config.portfolio_analysis_enabled:
+                from src.core.portfolio_analysis import run_portfolio_analysis
+
+                logger.info(f"持仓分析已启用，执行时间: {config.portfolio_analysis_time}")
+
+                scheduler.add_daily_task(
+                    name="portfolio_analysis",
+                    task=lambda: run_portfolio_analysis(query_source="schedule"),
+                    schedule_time=config.portfolio_analysis_time,
+                    run_immediately=False,
+                )
+
+            scheduler.run()
             return 0
         
         # 模式3: 正常单次运行
