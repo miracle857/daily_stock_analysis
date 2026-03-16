@@ -363,10 +363,94 @@ class BacktestSummary(Base):
     )
 
 
+class PortfolioHolding(Base):
+    """
+    持仓记录模型
+
+    每个用户每只股票维护一条汇总记录，买入时加权平均更新成本价，
+    卖出时扣减数量，数量归零时删除。
+    """
+    __tablename__ = 'portfolio_holdings'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(64), nullable=False, default='default', index=True)
+    stock_code = Column(String(10), nullable=False)
+    stock_name = Column(String(50))
+    quantity = Column(Integer, nullable=False, default=0)
+    avg_cost = Column(Float, nullable=False, default=0.0)
+    total_cost = Column(Float, nullable=False, default=0.0)
+    first_buy_time = Column(DateTime, nullable=False, default=datetime.now)
+    last_update_time = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'stock_code', name='uix_user_stock'),
+        Index('ix_portfolio_user', 'user_id'),
+    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'stock_code': self.stock_code,
+            'stock_name': self.stock_name,
+            'quantity': self.quantity,
+            'avg_cost': self.avg_cost,
+            'total_cost': self.total_cost,
+            'first_buy_time': self.first_buy_time.isoformat() if self.first_buy_time else None,
+            'last_update_time': self.last_update_time.isoformat() if self.last_update_time else None,
+        }
+
+
+class PortfolioTransaction(Base):
+    """
+    交易流水模型
+
+    记录每一笔买入/卖出操作，不可修改，用于审计和历史回溯。
+    """
+    __tablename__ = 'portfolio_transactions'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(64), nullable=False, default='default')
+    stock_code = Column(String(10), nullable=False)
+    stock_name = Column(String(50))
+    transaction_type = Column(String(4), nullable=False)  # 'buy' / 'sell'
+    quantity = Column(Integer, nullable=False)
+    price = Column(Float, nullable=False)
+    amount = Column(Float, nullable=False)
+    transaction_time = Column(DateTime, nullable=False, default=datetime.now)
+    profit_loss = Column(Float)        # 盈亏金额（仅卖出）
+    profit_loss_pct = Column(Float)    # 盈亏比例（仅卖出）
+    notes = Column(Text)
+    created_at = Column(DateTime, default=datetime.now)
+
+    __table_args__ = (
+        Index('ix_txn_user_stock', 'user_id', 'stock_code'),
+        Index('ix_txn_time', 'transaction_time'),
+    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'stock_code': self.stock_code,
+            'stock_name': self.stock_name,
+            'transaction_type': self.transaction_type,
+            'quantity': self.quantity,
+            'price': self.price,
+            'amount': self.amount,
+            'transaction_time': self.transaction_time.isoformat() if self.transaction_time else None,
+            'profit_loss': self.profit_loss,
+            'profit_loss_pct': self.profit_loss_pct,
+            'notes': self.notes,
+        }
+
+
 class DatabaseManager:
     """
     数据库管理器 - 单例模式
-    
+
     职责：
     1. 管理数据库连接池
     2. 提供 Session 上下文管理

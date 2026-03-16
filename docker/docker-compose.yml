@@ -22,7 +22,7 @@ x-common: &common
   volumes:
     - ../data:/app/data
     - ../logs:/app/logs
-    - ../reports:/app/reports
+    - ../reports:/app/src/reports
     - ../.env:/app/.env
     # 如需覆盖前端静态资源，可挂载本地 static 目录
     # - ../static:/app/static:ro

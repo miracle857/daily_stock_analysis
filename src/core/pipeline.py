@@ -282,6 +282,26 @@ class StockAnalysisPipeline:
                 stock_name  # 传入股票名称
             )
             
+            # Step 6.5: 注入持仓信息（如果用户有持仓）
+            try:
+                from src.services.portfolio_service import get_portfolio_service
+                pf_service = get_portfolio_service()
+                holding = pf_service.get_holding(code, with_realtime_price=False)
+                if holding:
+                    enhanced_context['portfolio'] = {
+                        'has_position': True,
+                        'quantity': holding.quantity,
+                        'avg_cost': holding.avg_cost,
+                        'total_cost': holding.total_cost,
+                        'first_buy_time': holding.first_buy_time.strftime('%Y-%m-%d') if holding.first_buy_time else '未知',
+                        'holding_days': holding.holding_days or 0,
+                    }
+                else:
+                    enhanced_context['portfolio'] = {'has_position': False}
+            except Exception as e:
+                logger.debug(f"[{code}] 获取持仓信息失败（非致命）: {e}")
+                enhanced_context['portfolio'] = {'has_position': False}
+
             # Step 7: 调用 AI 分析（传入增强的上下文和新闻）
             result = self.analyzer.analyze(enhanced_context, news_context=news_context)
 

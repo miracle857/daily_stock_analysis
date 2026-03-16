@@ -85,6 +85,12 @@ class BotMessage:
                 '批量': 'batch',
                 '帮助': 'help',
                 '状态': 'status',
+                '买入': 'buy',
+                '买': 'buy',
+                '卖出': 'sell',
+                '卖': 'sell',
+                '持仓': 'portfolio',
+                '仓位': 'portfolio',
             }
             for cn_cmd, en_cmd in chinese_commands.items():
                 if text.startswith(cn_cmd):

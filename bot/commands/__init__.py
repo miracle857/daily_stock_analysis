@@ -13,6 +13,9 @@ from bot.commands.status import StatusCommand
 from bot.commands.analyze import AnalyzeCommand
 from bot.commands.market import MarketCommand
 from bot.commands.batch import BatchCommand
+from bot.commands.buy import BuyCommand
+from bot.commands.sell import SellCommand
+from bot.commands.portfolio import PortfolioCommand
 
 # 所有可用命令（用于自动注册）
 ALL_COMMANDS = [
@@ -21,6 +24,9 @@ ALL_COMMANDS = [
     AnalyzeCommand,
     MarketCommand,
     BatchCommand,
+    BuyCommand,
+    SellCommand,
+    PortfolioCommand,
 ]
 
 __all__ = [
@@ -30,5 +36,8 @@ __all__ = [
     'AnalyzeCommand',
     'MarketCommand',
     'BatchCommand',
+    'BuyCommand',
+    'SellCommand',
+    'PortfolioCommand',
     'ALL_COMMANDS',
 ]
